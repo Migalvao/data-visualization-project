@@ -1,0 +1,33 @@
+- procurar "dataset" para desenhar a bay area de SF, como o mapa mundo q a prof desenhou na aula
+- d3 js gallery para facilitar como desenhar formas de visualizaçao
+- prof sugere olhar para sazonalidade/tempo meterologico
+- definir ao certo as várias tarefas no plano de trabalho do projeto, ou seja, nao dizer apenas "esta funcionalidade", mas sim "implementar isto,
+depois testar isto, depois implementar a outra cena"
+- gephi para gerar grafos
+https://l.messenger.com/l.php?u=https%3A%2F%2Fstats.sfmta.com%2Ft%2Fpublic%2Fviews%2FBayAreaBikeShare%2FStationTripActivity%3F%253Aembed%3Dy&h=AT0unIslOkvaAAucEdttLDQb0T1w3wtHskYn0s2yFuzXLxrR0iH7jw-q5r0wFnDsOfDNrgBYD1T4jt-ANfrAz39d-peGpKfTj7M0GBw0SPkBdniHbSFpKd5Qqz1mZWBIjoljgA
+nome: mapa de fluxo
+
+perguntas:
+- sobre o dataset grande, reduzimos para hora a hora ou de para 15 em 15 minutos por exemplo?
+- vale a pena mais opções para ver disponibilidade de bicicletas, por exemplo o utilizador escolher um dia específico?
+
+
+
+
+fazer analise de distancias entre estaçoes, outro heatmap por exemplo - done
+analisar centralidade das estaçoes, por exemplo com a media das distancias as restantes estaçoes - done
+tentar juntar 3 features de numero de viagens numa análise para estar dentro do contexto da estaçao em questao - done
+analisar questões do fim de semana - done (mais ou menos, simple bar plot)
+agregar dados de status de 15 em 15 minutos
+pagina de detalhes de uma estação nao tem de ser uma nova pagina, pode ser so uma tab como o google maps (mockups/layout)
+usar area toda para mostrar o mais mapa possivel (mockups)
+ter cuidado com o tempo que as funcionalidades demoram para nao fazer demais
+
+artigo:
+
+T Watcher - A new visual analytic system for effective traffic survillance
+
+cena interessante
+ws no fim do semestre para apresentar projeto de VAD a empresas (altice, feedzai, critical, etc...) com alunos
+de AED do bento. Cena meio a toa mas pode ser q nao tenhamos nada a perder, mas o Davi precisa de concordar
+nao sei se vale mt a pena mas pronto
