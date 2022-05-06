@@ -1,3 +1,13 @@
 body {
     background-color: #FCF7EC;
 }
+
+main {
+    margin: auto;
+    text-align: center;
+    display: block;
+}
+
+h2 {
+    font-family: sans-serif;
+}
