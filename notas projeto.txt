@@ -23,6 +23,9 @@ duvidas:
 - quão importante é ter os dados modulares, ou seja, poder escolher uma data? 
 Fica muito lento para a cena das viagens...
 - o que fazer com a cena das ligações? aquilo vê se mal
+- usar escala para normalizar grossura das linhas
+- pensar em fazer clusters de estaçoes mais proximas para simplificar view
+- quando a tab para uma estaçao abrir, chegar o mapa para a direita
 
 artigo:
 
