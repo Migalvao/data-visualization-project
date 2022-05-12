@@ -7,10 +7,6 @@ depois testar isto, depois implementar a outra cena"
 https://l.messenger.com/l.php?u=https%3A%2F%2Fstats.sfmta.com%2Ft%2Fpublic%2Fviews%2FBayAreaBikeShare%2FStationTripActivity%3F%253Aembed%3Dy&h=AT0unIslOkvaAAucEdttLDQb0T1w3wtHskYn0s2yFuzXLxrR0iH7jw-q5r0wFnDsOfDNrgBYD1T4jt-ANfrAz39d-peGpKfTj7M0GBw0SPkBdniHbSFpKd5Qqz1mZWBIjoljgA
 nome: mapa de fluxo
 
-perguntas:
-- sobre o dataset grande, reduzimos para hora a hora ou de para 15 em 15 minutos por exemplo?
-- vale a pena mais opções para ver disponibilidade de bicicletas, por exemplo o utilizador escolher um dia específico?
-
 
 
 
@@ -22,6 +18,11 @@ agregar dados de status de 15 em 15 minutos
 pagina de detalhes de uma estação nao tem de ser uma nova pagina, pode ser so uma tab como o google maps (mockups/layout)
 usar area toda para mostrar o mais mapa possivel (mockups)
 ter cuidado com o tempo que as funcionalidades demoram para nao fazer demais
+
+duvidas:
+- quão importante é ter os dados modulares, ou seja, poder escolher uma data? 
+Fica muito lento para a cena das viagens...
+- o que fazer com a cena das ligações? aquilo vê se mal
 
 artigo:
 
