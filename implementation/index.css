@@ -1,5 +1,5 @@
 body {
-    background-color: #FCF7EC;
+    background-color: #dedede;
 }
 
 main {
@@ -10,4 +10,8 @@ main {
 
 h2 {
     font-family: sans-serif;
+}
+
+text {
+    text-transform: uppercase;
 }
