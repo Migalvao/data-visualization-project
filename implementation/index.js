@@ -17,16 +17,16 @@ var projection = d3.geoAlbers()
 const path = d3.geoPath()
     .projection(projection)
 
-const render_stations = (stations) => {
+const render_stations = (stations, avg_station) => {
     // Add circles
     svg
         .selectAll("circle")
-        .data(stations)
+        .data(avg_station)
         .enter()
         .append("circle")
         .attr("cx", function (d) { return projection([d.long, d.lat])[0]; })
         .attr("cy", function (d) { return projection([d.long, d.lat])[1]; })
-        .attr("r", 14)
+        .attr("r", function (d) { return d.avg_docks_available * 1.5; }) // The radius of the circle is related to the avg number of docks available 
         .style("fill", "69b3a2")
         .attr("stroke", "#69b3a2")
         .attr("stroke-width", 3)
@@ -41,15 +41,15 @@ const render_stations = (stations) => {
                 .attr('fill', 'black')
                 .attr('font-size', '18px')
                 .attr('font-family', 'Inria Sans')
-                .attr("x", "20")
-                .attr("y", "40")
+                .attr("x", "40")
+                .attr("y", "60")
 
             d3.select(this.parentNode)
                 .insert("rect", "text")
                 .attr('id', 'temp2')
-                .attr("x", "0")
-                .attr("y", "20")
-                .attr("border-radius", "20px")
+                .attr("x", "20")
+                .attr("y", "40")
+                .attr("border-radius", "40px")
                 .attr("width", d.target.__data__.name.length * 10)
                 .attr("height", "40")
                 .style("fill", "#E4EEE3");
@@ -115,9 +115,27 @@ const load_data = async () => {
 
     const station_status = await d3.csv("data/status.csv", function (d) { return { station_id: d.station_id, docks_available: d.docks_available, date_time: d.time } });
 
+    const avgStatus = d3.group(station_status, d => d.station_id);
+
     const map_json = await d3.json("SFN.geojson");
 
-    return { stations, station_status, trips, trip_counts, map_json };
+    // Get the avg number of docks available
+    const avgStatus_station = [];
+    avgStatus.forEach(function (d, station_id) {
+        avgStatus_station.push({ 'station_id': station_id, 'avg_docks_available': d3.mean(d, function (p) { return p.docks_available; }) });
+    });
+
+    // Merge the station list to the list of avg number of docks available
+    const avg_station = [];
+    avgStatus_station.forEach(function (t, station_id) {
+        stations.forEach(function (d, id) {
+            if (station_id == id) {
+                avg_station.push({ 'id': id, 'name': d.name, 'lat': d.lat, 'long': d.long, 'avg_docks_available': t.avg_docks_available });
+            }
+        });
+    });
+
+    return { stations, station_status, trips, trip_counts, map_json, avg_station };
 
 }
 
@@ -133,7 +151,7 @@ const main = () => {
 
     svg = d3.select('svg');
 
-    load_data().then(({ stations, station_status, trips, trip_counts, map_json }) => {
+    load_data().then(({ stations, station_status, trips, trip_counts, map_json, avg_station }) => {
 
         stations.map((s) => { stations_json[s.id] = { lat: s.lat, long: s.long, name: s.name } });
 
@@ -141,7 +159,7 @@ const main = () => {
 
         render_connections(trip_counts, stations, trip_counts);
 
-        render_stations(stations);
+        render_stations(stations, avg_station);
     })
 
 }
