@@ -26,7 +26,7 @@ const render_stations = (stations, avg_station) => {
         .append("circle")
         .attr("cx", function (d) { return projection([d.long, d.lat])[0]; })
         .attr("cy", function (d) { return projection([d.long, d.lat])[1]; })
-        .attr("r", function (d) { return d.avg_docks_available * 1.5; })
+        .attr("r", function (d) { return d.avg_docks_available * 1.5; }) // The radius of the circle is related to the avg number of docks available 
         .style("fill", "69b3a2")
         .attr("stroke", "#69b3a2")
         .attr("stroke-width", 3)
@@ -119,12 +119,13 @@ const load_data = async () => {
 
     const map_json = await d3.json("SFN.geojson");
 
+    // Get the avg number of docks available
     const avgStatus_station = [];
-
     avgStatus.forEach(function (d, station_id) {
         avgStatus_station.push({ 'station_id': station_id, 'avg_docks_available': d3.mean(d, function (p) { return p.docks_available; }) });
     });
 
+    // Merge the station list to the list of avg number of docks available
     const avg_station = [];
     avgStatus_station.forEach(function (t, station_id) {
         stations.forEach(function (d, id) {
