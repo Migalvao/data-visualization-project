@@ -11,7 +11,7 @@ var projection = d3.geoAlbers()
     .scale(700000)
     .rotate([-longitude, 0])
     .center([0, latitude]);
-// .parallels([24, 43]);
+//.parallels([24, 43]);
 
 // A path generator
 const path = d3.geoPath()
@@ -27,8 +27,8 @@ const render_stations = (stations, avg_station) => {
         .attr("cx", function (d) { return projection([d.long, d.lat])[0]; })
         .attr("cy", function (d) { return projection([d.long, d.lat])[1]; })
         .attr("r", function (d) { return d.avg_docks_available * 1.5; }) // The radius of the circle is related to the avg number of docks available 
-        .style("fill", "69b3a2")
-        .attr("stroke", "#69b3a2")
+        .style("fill", "#A20025")
+        .attr("stroke", "#A20025")
         .attr("stroke-width", 3)
         .attr("fill-opacity", .4)
         .on('mouseover', function (d) {
@@ -49,10 +49,10 @@ const render_stations = (stations, avg_station) => {
                 .attr('id', 'temp2')
                 .attr("x", "20")
                 .attr("y", "40")
-                .attr("border-radius", "40px")
-                .attr("width", d.target.__data__.name.length * 10)
-                .attr("height", "40")
-                .style("fill", "#E4EEE3");
+                .attr("width", d.target.__data__.name.length * 10 + 55)
+                .attr("height", "40px")
+                //.attr("border", "40% solid")
+                .style("fill", "#99badd");
         })
         .on('mouseout', function () {
             d3.select(this.parentNode).selectAll('#temp').remove('#temp');
@@ -85,7 +85,7 @@ const render_connections = (trips, stations, trip_counts) => {
         .join("path")
         .attr("d", function (d) { return path(d) })
         .style("fill", "red")
-        .style("stroke", "#69b3a2")
+        .style("stroke", "#A20025")
         .style("stroke-width", function (d) { console.log(d.size); return d.size; });
 }
 
@@ -96,7 +96,7 @@ const render_map = (map_json) => {
         .enter()
         .append("path")
         .attr("d", d3.geoPath().projection(projection))
-        .style("fill", function () { return "#FF7870" })
+        .style("fill", function () { return "#008938" })
         // .on("mouseover", function (e) { d3.select(this).style("fill", "#E4EEE3") })
         // .on("mouseout", function (e) { d3.select(this).style("fill", "#FF7870") })
         .attr("stroke", "white")
