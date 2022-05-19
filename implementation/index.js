@@ -19,9 +19,20 @@ const path = d3.geoPath()
 
 const render_stations = (stations, avg_station) => {
     // Color Scale of the circle
-    var colorScale = d3.scaleOrdinal()
-        .domain(avg_station.map(function (d) { return d.avg_docks_available }))
-        .range(d3.schemeCategory10); // https://github.com/d3/d3-scale-chromatic
+    let colorScale = d3.scaleSequential()
+        .domain(d3.extent(avg_station, function (d) { return d.avg_docks_available }))
+        .interpolator(d3.interpolateRainbow); // interpolateRainbow, interpolateMagma, interpolateWarm
+
+    //LEGEND 
+    // TODO Colocar as legendas em range
+    var legend = d3.legendColor()
+        .scale(colorScale)
+        //.labelFormat(d3.format(".0f"))
+        .title("Legend");
+
+    svg.append("g")
+        .attr("transform", "translate(900,35)")
+        .call(legend);
 
     // Add circles
     svg
@@ -33,7 +44,7 @@ const render_stations = (stations, avg_station) => {
         .attr("cy", function (d) { return projection([d.long, d.lat])[1]; })
         .attr("r", function (d) { return d.avg_docks_available * 1.5; }) // The radius of the circle is related to the avg number of docks available 
         .style("fill", function (d) { return colorScale(d.avg_docks_available); }) // "#A20025"
-        .attr("stroke", "#A20025")
+        .attr("stroke", "#A20025") // function (d) { return colorScale(d.avg_docks_available); }
         .attr("stroke-width", 3)
         .attr("fill-opacity", .4)
         .on('mouseover', function (d) {
@@ -66,21 +77,6 @@ const render_stations = (stations, avg_station) => {
             d3.select(this.parentNode).selectAll('#temp2').remove('#temp2');
         }).raise();
 
-    /*
-    //LEGEND
-    var colorLegend = d3.legendColor()
-        .labelFormat(d3.format(".0f"))
-        .scale(colorScale)
-        .shapePadding(5)
-        .shapeWidth(50)
-        .shapeHeight(20)
-        .labelOffset(12);
-
-    svg.append("g")
-        .attr("x", "20")
-        .attr("y", "45")
-        .call(colorLegend);
-        */
 }
 
 const render_connections = (trips, stations, trip_counts) => {
