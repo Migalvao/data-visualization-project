@@ -66,20 +66,21 @@ const render_stations = (stations, avg_station) => {
             d3.select(this.parentNode).selectAll('#temp2').remove('#temp2');
         }).raise();
 
-    /* LEGEND
-var colorLegend = d3.legend.color()
-    .labelFormat(d3.format(".0f"))
-    .scale(colorScale)
-    .shapePadding(5)
-    .shapeWidth(50)
-    .shapeHeight(20)
-    .labelOffset(12);
+    /*
+    //LEGEND
+    var colorLegend = d3.legendColor()
+        .labelFormat(d3.format(".0f"))
+        .scale(colorScale)
+        .shapePadding(5)
+        .shapeWidth(50)
+        .shapeHeight(20)
+        .labelOffset(12);
 
-svg.append("g")
-    //.attr("transform", "translate(352, 60)")
-    .attr("x", "20")
-    .attr("y", "45")
-    .call(colorLegend);*/
+    svg.append("g")
+        .attr("x", "20")
+        .attr("y", "45")
+        .call(colorLegend);
+        */
 }
 
 const render_connections = (trips, stations, trip_counts) => {
