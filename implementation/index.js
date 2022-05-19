@@ -18,6 +18,11 @@ const path = d3.geoPath()
     .projection(projection)
 
 const render_stations = (stations, avg_station) => {
+    // Color Scale of the circle
+    var colorScale = d3.scaleOrdinal()
+        .domain(avg_station.map(function (d) { return d.avg_docks_available }))
+        .range(d3.schemeCategory10); // https://github.com/d3/d3-scale-chromatic
+
     // Add circles
     svg
         .selectAll("circle")
@@ -27,7 +32,7 @@ const render_stations = (stations, avg_station) => {
         .attr("cx", function (d) { return projection([d.long, d.lat])[0]; })
         .attr("cy", function (d) { return projection([d.long, d.lat])[1]; })
         .attr("r", function (d) { return d.avg_docks_available * 1.5; }) // The radius of the circle is related to the avg number of docks available 
-        .style("fill", "#A20025")
+        .style("fill", function (d) { return colorScale(d.avg_docks_available); }) // "#A20025"
         .attr("stroke", "#A20025")
         .attr("stroke-width", 3)
         .attr("fill-opacity", .4)
@@ -40,19 +45,21 @@ const render_stations = (stations, avg_station) => {
                 .text(d.target.__data__.name)
                 .attr('fill', 'black')
                 .attr('font-size', '18px')
-                .attr('font-family', 'Inria Sans')
-                .attr("x", "40")
-                .attr("y", "60")
+                .attr('font-family', 'Garamond, serif')
+                .attr("x", "35")
+                .attr("y", "65")
 
             d3.select(this.parentNode)
                 .insert("rect", "text")
                 .attr('id', 'temp2')
                 .attr("x", "20")
-                .attr("y", "40")
+                .attr("y", "45")
                 .attr("width", d.target.__data__.name.length * 10 + 55)
                 .attr("height", "40px")
-                //.attr("border", "40% solid")
-                .style("fill", "#99badd");
+                .attr("border-radius", "7px") // not working
+                .style("stroke", "#69b3a2")
+                .style("opacity", .3)
+                .style("fill", "#008938");
         })
         .on('mouseout', function () {
             d3.select(this.parentNode).selectAll('#temp').remove('#temp');
