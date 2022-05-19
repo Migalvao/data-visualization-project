@@ -54,7 +54,7 @@ const render_stations = (stations, avg_station) => {
                 .attr('id', 'temp2')
                 .attr("x", "20")
                 .attr("y", "45")
-                .attr("width", d.target.__data__.name.length * 10 + 55)
+                .attr("width", d.target.__data__.name.length * 10 + 30)
                 .attr("height", "40px")
                 .attr("border-radius", "7px") // not working
                 .style("stroke", "#69b3a2")
@@ -65,6 +65,21 @@ const render_stations = (stations, avg_station) => {
             d3.select(this.parentNode).selectAll('#temp').remove('#temp');
             d3.select(this.parentNode).selectAll('#temp2').remove('#temp2');
         }).raise();
+
+    /* LEGEND
+var colorLegend = d3.legend.color()
+    .labelFormat(d3.format(".0f"))
+    .scale(colorScale)
+    .shapePadding(5)
+    .shapeWidth(50)
+    .shapeHeight(20)
+    .labelOffset(12);
+
+svg.append("g")
+    //.attr("transform", "translate(352, 60)")
+    .attr("x", "20")
+    .attr("y", "45")
+    .call(colorLegend);*/
 }
 
 const render_connections = (trips, stations, trip_counts) => {
