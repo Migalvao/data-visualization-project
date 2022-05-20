@@ -1,6 +1,6 @@
 var width = window.innerWidth - 100,
-    height = window.innerHeight - 80;
-scale = 270000,
+    height = window.innerHeight - 80,
+    scale = 270000,
     latitude = 37.7880,
     longitude = -122.4153;
 
@@ -18,21 +18,6 @@ const path = d3.geoPath()
     .projection(projection)
 
 const render_stations = (stations, avg_station) => {
-    // Color Scale of the circle
-    let colorScale = d3.scaleSequential()
-        .domain(d3.extent(avg_station, function (d) { return d.avg_docks_available }))
-        .interpolator(d3.interpolateRainbow); // interpolateRainbow, interpolateMagma, interpolateWarm
-
-    //LEGEND 
-    // TODO Colocar as legendas em range
-    var legend = d3.legendColor()
-        .scale(colorScale)
-        //.labelFormat(d3.format(".0f"))
-        .title("Legend");
-
-    svg.append("g")
-        .attr("transform", "translate(900,35)")
-        .call(legend);
 
     // Add circles
     svg
@@ -43,8 +28,8 @@ const render_stations = (stations, avg_station) => {
         .attr("cx", function (d) { return projection([d.long, d.lat])[0]; })
         .attr("cy", function (d) { return projection([d.long, d.lat])[1]; })
         .attr("r", function (d) { return d.avg_docks_available * 1.5; }) // The radius of the circle is related to the avg number of docks available 
-        .style("fill", function (d) { return colorScale(d.avg_docks_available); }) // "#A20025"
-        .attr("stroke", "#A20025") // function (d) { return colorScale(d.avg_docks_available); }
+        .style("fill", "#A20025")
+        .attr("stroke", "#A20025")
         .attr("stroke-width", 3)
         .attr("fill-opacity", .4)
         .on('mouseover', function (d) {
@@ -71,10 +56,15 @@ const render_stations = (stations, avg_station) => {
                 .style("stroke", "#69b3a2")
                 .style("opacity", .3)
                 .style("fill", "#008938");
+
+            d3.select(this).style("fill", "#E4EEE3")
+            d3.select(this).style("stroke", "#FF7870")
         })
         .on('mouseout', function () {
             d3.select(this.parentNode).selectAll('#temp').remove('#temp');
             d3.select(this.parentNode).selectAll('#temp2').remove('#temp2');
+            d3.select(this).style("fill", "#A20025");
+            d3.select(this).style("stroke", "#A20025");
         }).raise();
 
 }
@@ -87,16 +77,18 @@ const render_connections = (trips, stations, trip_counts) => {
         station_1 = stations_json[row.start_station_id];
         station_2 = stations_json[row.end_station_id];
 
+        // find number of trips between station_1 and station_2
+
+
         // console.log(row)
         // console.log(station_1, station_2);
         source = [+station_1.long, +station_1.lat]
         target = [+station_2.long, +station_2.lat]
-        topush = { type: "LineString", coordinates: [source, target], size: row.count / 2500 }
+        topush = { type: "LineString", coordinates: [source, target], size: row.count / 1200 }
 
         // console.log(topush);
         link.push(topush)
     })
-
 
     // Add the path
     svg.selectAll("myPath")
@@ -105,7 +97,8 @@ const render_connections = (trips, stations, trip_counts) => {
         .attr("d", function (d) { return path(d) })
         .style("fill", "red")
         .style("stroke", "#A20025")
-        .style("stroke-width", function (d) { console.log(d.size); return d.size; });
+        .style("stroke-width", function (d) { console.log(d.size); return d.size; })
+        .style("opacity", .3);
 }
 
 const render_map = (map_json) => {
@@ -116,8 +109,6 @@ const render_map = (map_json) => {
         .append("path")
         .attr("d", d3.geoPath().projection(projection))
         .style("fill", function () { return "#008938" })
-        // .on("mouseover", function (e) { d3.select(this).style("fill", "#E4EEE3") })
-        // .on("mouseout", function (e) { d3.select(this).style("fill", "#FF7870") })
         .attr("stroke", "white")
         .attr("stroke-width", .3)
         .style("opacity", .3);
