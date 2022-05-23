@@ -17,8 +17,7 @@ var projection = d3.geoAlbers()
 const path = d3.geoPath()
     .projection(projection)
 
-const render_stations = (stations, avg_station) => {
-
+const render_stations = (stations, avg_station, trip_counts) => {
     // Add circles
     svg
         .selectAll("circle")
@@ -33,7 +32,7 @@ const render_stations = (stations, avg_station) => {
         .attr("stroke-width", 3)
         .attr("fill-opacity", .4)
         .on('mouseover', function (d) {
-            // console.log(d.target.__data__);
+            // Text
             d3.select(this.parentNode)
                 .append('text')
                 .attr('dy', ".35em")
@@ -44,7 +43,7 @@ const render_stations = (stations, avg_station) => {
                 .attr('font-family', 'Garamond, serif')
                 .attr("x", "35")
                 .attr("y", "65")
-
+            // Text Box
             d3.select(this.parentNode)
                 .insert("rect", "text")
                 .attr('id', 'temp2')
@@ -60,13 +59,45 @@ const render_stations = (stations, avg_station) => {
             d3.select(this).style("fill", "#E4EEE3")
             d3.select(this).style("stroke", "#FF7870")
         })
-        .on('mouseout', function () {
+        .on('mouseout', function (d) {
             d3.select(this.parentNode).selectAll('#temp').remove('#temp');
             d3.select(this.parentNode).selectAll('#temp2').remove('#temp2');
             d3.select(this).style("fill", "#A20025");
             d3.select(this).style("stroke", "#A20025");
-        }).raise();
+        }).raise()
+    /*
+    .on("click", function (d, i) { //TODO MOUSE CLICK 
+        const graph = []
 
+        // Get all the trips of a certain station
+        stations.forEach(function (dx, id) {
+            // Get the REAL id of the station
+            if (i.id == id) {
+                trip_counts.forEach(function (dy) {
+                    if (dy.start_station_id == dx.id) {
+                        graph.push({ 'start_station_id': dx.id, 'end_station_id': dy.end_station_id, 'count': dy.count });
+                    }
+                });
+                return; // exit the cycle
+            }
+        });
+
+        var yScale = d3.scaleLinear()
+            .domain([0, d3.max(graph, function (d) { return d.count; })]);
+
+        var xScale = d3.scaleLinear()
+            .domain([0, d3.max(graph, function (d) { return d.end_station_id; })])
+
+
+        svg.selectAll("circle")
+            .data(graph)
+            .enter()
+            .append("circle")
+            .attr("cx", function (d) { return xScale(d.end_station_id); })
+            .attr("cy", function (d) { return yScale(d.count); })
+
+    });
+    */
 }
 
 const render_connections = (trips, stations, trip_counts) => {
@@ -97,7 +128,7 @@ const render_connections = (trips, stations, trip_counts) => {
         .attr("d", function (d) { return path(d) })
         .style("fill", "red")
         .style("stroke", "#A20025")
-        .style("stroke-width", function (d) { console.log(d.size); return d.size; })
+        .style("stroke-width", function (d) { /*console.log(d.size);*/ return d.size; })
         .style("opacity", .3);
 }
 
@@ -169,7 +200,7 @@ const main = () => {
 
         render_connections(trip_counts, stations, trip_counts);
 
-        render_stations(stations, avg_station);
+        render_stations(stations, avg_station, trip_counts);
     })
 
 }
