@@ -2,7 +2,8 @@ var width = window.innerWidth - 100,
     height = window.innerHeight - 80,
     scale = 270000,
     latitude = 37.7880,
-    longitude = -122.4153;
+    longitude = -122.4153,
+    length = 0;
 
 var svg;
 var stations_json = {};
@@ -39,22 +40,23 @@ const render_stations = (stations, avg_station, trip_counts) => {
                 .attr('id', 'temp')
                 .text(d.target.__data__.name)
                 .attr('fill', 'black')
-                .attr('font-size', '18px')
+                .attr('font-size', '4vw')
                 .attr('font-family', 'Garamond, serif')
-                .attr("x", "35")
+                .attr("x", "835")
                 .attr("y", "65")
             // Text Box
             d3.select(this.parentNode)
                 .insert("rect", "text")
                 .attr('id', 'temp2')
-                .attr("x", "20")
+                .attr("x", "820")
                 .attr("y", "45")
-                .attr("width", d.target.__data__.name.length * 10 + 30)
-                .attr("height", "40px")
-                .attr("border-radius", "7px") // not working
+                .attr("width", function (dx) {
+                    length = d.target.__data__.name.length * 10 + 32
+                    return length;
+                })
+                .attr("height", "3vw")
                 .style("stroke", "#69b3a2")
-                .style("opacity", .3)
-                .style("fill", "#008938");
+                .style("opacity", .3);
 
             d3.select(this).style("fill", "#E4EEE3")
             d3.select(this).style("stroke", "#FF7870")
@@ -65,39 +67,73 @@ const render_stations = (stations, avg_station, trip_counts) => {
             d3.select(this).style("fill", "#A20025");
             d3.select(this).style("stroke", "#A20025");
         }).raise()
-    /*
-    .on("click", function (d, i) { //TODO MOUSE CLICK 
-        const graph = []
+        .on("click", function (d, i) { //TODO COMPLETE MOUSE CLICK 
+            const graph = []
 
-        // Get all the trips of a certain station
-        stations.forEach(function (dx, id) {
-            // Get the REAL id of the station
-            if (i.id == id) {
-                trip_counts.forEach(function (dy) {
-                    if (dy.start_station_id == dx.id) {
-                        graph.push({ 'start_station_id': dx.id, 'end_station_id': dy.end_station_id, 'count': dy.count });
-                    }
+            // Get all the trips of a certain station
+            stations.forEach(function (dx, id) {
+                // Get the REAL id of the station
+                if (i.id == id) {
+                    trip_counts.forEach(function (dy) {
+                        if (dy.start_station_id == dx.id) {
+                            graph.push({ 'start_station_id': dx.id, 'end_station_id': dy.end_station_id, 'count': dy.count });
+                        }
+                    });
+                    return; // exit the cycle
+                }
+            });
+
+            // Graph
+            let graph_stack = svg.append('g')
+                .attr('id', 'temp3')
+                .attr('transform', 'translate(' + 55 + ',' + 100 + ')');
+
+            // Color Scale => st
+            var colorScale = d3.scaleLinear()
+                .domain([d3.min(graph, function (dq) { return dq.end_station_id; }), d3.max(graph, function (dq) { return dq.end_station_id; })])
+                .range(["red", "blue"]);
+
+            // X axis -> end_station_id
+            let x = d3.scaleBand()
+                .domain([d3.min(graph, function (dq) { return dq.end_station_id; }), d3.max(graph, function (dq) { return dq.end_station_id; })])
+                .range([0, length - 50]);
+
+            graph_stack.append("g")
+                .attr("transform", "translate(0,300)")
+                .call(d3.axisBottom(x));
+
+            // Y axis -> number of trips between the stations
+            let y = d3.scaleLinear()
+                .domain([d3.max(graph, function (dr) { return dr.count; }), 0])
+                .range([0, 300]);
+
+            graph_stack.append("g")
+                .call(d3.axisLeft(y));
+
+            graph_stack.append("g")
+                .selectAll("g")
+                .data(graph)
+                .enter()
+                .append("rect")
+                .attr("opacity", .3)
+                .attr("x", function (dg) {
+                    return dg.end_station_id;
+                })
+                .attr("y", "0")
+                .attr("height", function (dg) {
+                    return dg.count % 300;
+                })
+                .attr("width", 6)
+                .attr("fill", function (dg) { return colorScale(dg.start_station_id); })
+                .attr("transform", function (dg) {
+                    return "rotate(180, " + dg.end_station_id + ", 150)";
                 });
-                return; // exit the cycle
-            }
+            graph_stack.on('click', function (d) {
+                d3.select(this.parentNode).selectAll('#temp3').remove('#temp3');
+            }).raise()
+
         });
 
-        var yScale = d3.scaleLinear()
-            .domain([0, d3.max(graph, function (d) { return d.count; })]);
-
-        var xScale = d3.scaleLinear()
-            .domain([0, d3.max(graph, function (d) { return d.end_station_id; })])
-
-
-        svg.selectAll("circle")
-            .data(graph)
-            .enter()
-            .append("circle")
-            .attr("cx", function (d) { return xScale(d.end_station_id); })
-            .attr("cy", function (d) { return yScale(d.count); })
-
-    });
-    */
 }
 
 const render_connections = (trips, stations, trip_counts) => {
