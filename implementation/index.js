@@ -28,6 +28,14 @@ const path = d3.geoPath()
 const render_stations = (stations, avg_station, trip_counts) => {
     //Clear existing circles
     svg.selectAll("circle").remove();
+    const counts = Object.values(trip_counts);
+
+    max_trips = d3.max(counts, function (d) { return d.count });
+    min_trips = d3.min(counts, function (d) { return d.count });
+
+    const station_Radius = d3.scaleLinear()
+    .domain([0, max_trips])
+    .range([0, 60]);
 
     // Add circles
     svg
@@ -37,32 +45,33 @@ const render_stations = (stations, avg_station, trip_counts) => {
         .append("circle")
         .attr("cx", function (d) { return projection([d.long, d.lat])[0]; })
         .attr("cy", function (d) { return projection([d.long, d.lat])[1]; })
-        .attr("r", function (d) { return d.avg_docks_available * 1.5; }) // The radius of the circle is related to the avg number of docks available 
+        .attr("r", function (d) { return station_Radius(stations_json[d.id]['n_trips']); }) // The radius of the circle is related to the number of trips
         .style("fill", "#A20025")
         .attr("stroke", "#A20025")
         .attr("stroke-width", 3)
         .attr("fill-opacity", .4)
         .on('mouseover', function (d) {
             // Text
+            console.log(d);
             d3.select(this.parentNode)
                 .append('text')
                 .attr('dy', ".35em")
                 .attr('id', 'temp')
-                .text(d.target.__data__.name)
+                .text(d.target.__data__.name + " - " + stations_json[d.target.__data__.id]['n_trips'] + " trips")
                 .attr('fill', 'black')
                 .attr('font-size', '15px')
                 .attr('font-family', 'monospace')
                 .attr('font-weight', 'bold')
-                .attr("x", "835")
+                .attr("x", "705")
                 .attr("y", "65")
             // Text Box
             d3.select(this.parentNode)
                 .append("rect", "text")
                 .attr('id', 'temp2')
-                .attr("x", "820")
+                .attr("x", "690")
                 .attr("y", "45")
                 .attr("width", function (dx) {
-                    length = d.target.__data__.name.length * 10 + 32
+                    length = d.target.__data__.name.length * 10 + 150;
                     return length;
                 })
                 .attr("height", "3vw")
@@ -300,10 +309,14 @@ const get_trip_counts = (trips) => {
         split = name.split("_");
         start_station_id = split[0];
         end_station_id = split[1];
+        count = trip_counts_json[name];
 
-        trip_counts.push({start_station_id: start_station_id, end_station_id: end_station_id, count: trip_counts_json[name]});
+        stations_json[start_station_id]['n_trips'] = stations_json[start_station_id]['n_trips'] || 0 + count;
+        stations_json[end_station_id]['n_trips'] = stations_json[end_station_id]['n_trips'] || 0 + count;
+
+        trip_counts.push({start_station_id: start_station_id, end_station_id: end_station_id, count: count});
     })
-
+    
     return trip_counts;
     
 }
@@ -366,7 +379,7 @@ const load_data = async (first_load) => {
     avgStatus_station.forEach(function (t, station_id) {
         stations.forEach(function (d, id) {
             if (station_id == id) {
-                avg_station.push({ 'id': id, 'name': d.name, 'lat': d.lat, 'long': d.long, 'avg_docks_available': t.avg_docks_available });
+                avg_station.push({ 'id': d.id, 'name': d.name, 'lat': d.lat, 'long': d.long, 'avg_docks_available': t.avg_docks_available });
             }
         });
     });
