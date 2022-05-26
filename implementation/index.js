@@ -263,6 +263,7 @@ const render_connections = (trip_counts, selected_station) => {
 
 const render_map = (map_json) => {
     svg.selectAll("path").remove();
+    d3.selectAll('#temp3').remove();
 
     svg.append("g")
         .selectAll("path")
