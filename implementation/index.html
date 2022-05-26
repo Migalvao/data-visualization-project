@@ -15,8 +15,20 @@
 
 <body>
     <main>
-        <h2>San Francisco Bicycles</h2>
-        <div id="viz_container"></div>
+        <h2 id="mainTitle">San Francisco Bicycles</h2>
+        <div id="viz_container">
+            <label for="start">Start date:</label>
+
+            <input type="date" id="start_date" name="start_date"
+                   value="2013-08-01"
+                   min="2013-08-01" max="2015-08-01">
+
+            <label for="start">End date:</label>
+
+            <input type="date" id="end_date" name="end_date"
+                    value="2015-08-01"
+                    min="2013-08-01" max="2015-08-01">
+                </div>
     </main>
     <script type="text/javascript" src="index.js"></script>
 </body>

@@ -1,15 +1,22 @@
 var width = window.innerWidth - 100,
-    height = window.innerHeight - 80,
+    height = window.innerHeight - 110,
     scale = 270000,
-    latitude = 37.7880,
+    latitude = 37.7870,
     longitude = -122.4153,
     length = 0;
 
+const DEBUG = false;
+
+const start_date_input = document.getElementById("start_date");
+const end_date_input = document.getElementById("end_date");
+    
 var svg;
 var stations_json = {};
+var trips, stations;
+var selected_station = null;
 
 var projection = d3.geoAlbers()
-    .scale(700000)
+    .scale(650000)
     .rotate([-longitude, 0])
     .center([0, latitude]);
 //.parallels([24, 43]);
@@ -19,6 +26,9 @@ const path = d3.geoPath()
     .projection(projection)
 
 const render_stations = (stations, avg_station, trip_counts) => {
+    //Clear existing circles
+    svg.selectAll("circle").remove();
+
     // Add circles
     svg
         .selectAll("circle")
@@ -136,7 +146,14 @@ const render_stations = (stations, avg_station, trip_counts) => {
 
 }
 
-const render_connections = (trips, stations, trip_counts) => {
+const render_connections = (trip_counts, selected_station) => {
+    
+    max_trips = d3.max(trip_counts, function (d) { return d.count });
+
+    // Linear scale for width of connections
+    connection_Width = d3.scaleLinear()
+        .domain([0, max_trips])
+        .range([0, 6])
 
     const link = []
 
@@ -146,14 +163,10 @@ const render_connections = (trips, stations, trip_counts) => {
 
         // find number of trips between station_1 and station_2
 
-
-        // console.log(row)
-        // console.log(station_1, station_2);
         source = [+station_1.long, +station_1.lat]
         target = [+station_2.long, +station_2.lat]
-        topush = { type: "LineString", coordinates: [source, target], size: row.count / 1200 }
+        topush = { type: "LineString", coordinates: [source, target], count: row.count }
 
-        // console.log(topush);
         link.push(topush)
     })
 
@@ -164,11 +177,13 @@ const render_connections = (trips, stations, trip_counts) => {
         .attr("d", function (d) { return path(d) })
         .style("fill", "red")
         .style("stroke", "#A20025")
-        .style("stroke-width", function (d) { /*console.log(d.size);*/ return d.size; })
+        .style("stroke-width", function (d) { return connection_Width(d.count); })
         .style("opacity", .3);
 }
 
 const render_map = (map_json) => {
+    svg.selectAll("path").remove();
+
     svg.append("g")
         .selectAll("path")
         .data(map_json.features)
@@ -181,16 +196,79 @@ const render_map = (map_json) => {
         .style("opacity", .3);
 }
 
+const get_trip_counts = (trips) => {
+    const trip_counts_json = {};
+    const trip_counts = [];
+    
+    trips.forEach(function (row) {
+        var name = row.start_station_id + "_" + row.end_station_id;
 
-const load_data = async () => {
+        if(trip_counts_json[name]){
+            let count = trip_counts_json[name];
+            trip_counts_json[name] = count + 1;
+        } else {
+            trip_counts_json[name] = 1;
+        }
+    })
 
-    const stations = await d3.csv("data/station.csv", function (d) { return { id: d.id, name: d.name, lat: d.lat, long: d.long }; });
+    const counts = Object.keys(trip_counts_json);
+    var start_station_id, end_station_id;
+    var split;
+    
+    counts.forEach((name) => {
+        split = name.split("_");
+        start_station_id = split[0];
+        end_station_id = split[1];
 
-    const trips = await d3.csv("data/trip.csv", function (d) { return { start_date: d.start_date, end_date: d.end_date, start_station_id: d.start_station_id, end_station_id: d.end_station_id } });
+        trip_counts.push({start_station_id: start_station_id, end_station_id: end_station_id, count: trip_counts_json[name]});
+    })
+
+    return trip_counts;
+    
+}
+
+const date_update = (e) => {
+    document.getElementById("mainTitle").innerHTML = "San Francisco Bicycles (loading...)";
+
+    load_data(false).then(({ stations, station_status, trips, trip_counts, map_json, avg_station }) => {
+
+        trip_counts = get_trip_counts(trips);
+
+        render_map(map_json);
+
+        render_connections(trip_counts);
+
+        render_stations(stations, avg_station, trip_counts);
+        
+        document.getElementById("mainTitle").innerHTML = "San Francisco Bicycles";
+    })
+    
+}
+
+
+const load_data = async (first_load) => {
+
+    if(first_load) {
+        stations = await d3.csv("data/station.csv", function (d) { return { id: d.id, name: d.name, lat: d.lat, long: d.long }; });
+    }
+
+    var start_date = new Date(start_date_input.value);
+    var end_date = new Date(end_date_input.value);
+
+    trips = await d3.csv("data/trip.csv", function (d) { 
+        if(new Date(d.start_date) > start_date && new Date(d.end_date) < end_date) 
+            return { start_date: d.start_date, end_date: d.end_date, start_station_id: d.start_station_id, end_station_id: d.end_station_id } 
+    });
 
     const trip_counts = await d3.csv("data/trip_count.csv", function (d) { return { start_station_id: d.start_station_id, end_station_id: d.end_station_id, count: d.count } });
 
-    const station_status = await d3.csv("data/status.csv", function (d) { return { station_id: d.station_id, docks_available: d.docks_available, date_time: d.time } });
+    const station_status = await d3.csv("data/status.csv", function (d) { 
+        let dt = d.time;
+
+        if(dt > start_date_input.value && dt < end_date_input.value) {
+            return { station_id: d.station_id, docks_available: d.docks_available, date_time: dt } 
+        }
+    });
 
     const avgStatus = d3.group(station_status, d => d.station_id);
 
@@ -228,13 +306,19 @@ const main = () => {
 
     svg = d3.select('svg');
 
-    load_data().then(({ stations, station_status, trips, trip_counts, map_json, avg_station }) => {
+    start_date_input.addEventListener("change", date_update);
+    end_date_input.addEventListener("change", date_update);
+
+    load_data(true).then(({ stations, station_status, trips, trip_counts, map_json, avg_station }) => {
 
         stations.map((s) => { stations_json[s.id] = { lat: s.lat, long: s.long, name: s.name } });
 
         render_map(map_json);
 
-        render_connections(trip_counts, stations, trip_counts);
+        if(! DEBUG)
+            trip_counts = get_trip_counts(trips);
+
+        render_connections(trip_counts);
 
         render_stations(stations, avg_station, trip_counts);
     })

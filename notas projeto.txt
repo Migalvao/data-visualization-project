@@ -21,11 +21,13 @@ ter cuidado com o tempo que as funcionalidades demoram para nao fazer demais
 
 duvidas:
 - quão importante é ter os dados modulares, ou seja, poder escolher uma data? 
-Fica muito lento para a cena das viagens...
-- o que fazer com a cena das ligações? aquilo vê se mal
-- usar escala para normalizar grossura das linhas
-- pensar em fazer clusters de estaçoes mais proximas para simplificar view
+Fica muito lento para a cena das viagens... - avaliar quão mau é e depois ver
+- o que fazer com a cena das ligações? aquilo vê se mal - retirar linhas de pontos não visiveis (por causa de zoom),
+apenas mostrar pontos de uma estação quando se seleciona, talvez fazer cluster de estaçoes mais proximas em zoom out
+- implementar zoom e mexer o mapa
+- usar escala para normalizar grossura das linhas (n tem de ser mas ajuda)
 - quando a tab para uma estaçao abrir, chegar o mapa para a direita
+
 
 artigo:
 
@@ -35,3 +37,5 @@ cena interessante
 ws no fim do semestre para apresentar projeto de VAD a empresas (altice, feedzai, critical, etc...) com alunos
 de AED do bento. Cena meio a toa mas pode ser q nao tenhamos nada a perder, mas o Davi precisa de concordar
 nao sei se vale mt a pena mas pronto
+Sobre o workshop:
+- os pontos ganhso sao um bonus à avaliação do projeto
