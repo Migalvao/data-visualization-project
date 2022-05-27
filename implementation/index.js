@@ -12,7 +12,8 @@ const end_date_input = document.getElementById("end_date");
     
 var svg;
 var stations_json = {};
-var trips, stations;
+var map_json;
+var trips, stations, trip_counts;
 var selected_station = null;
 
 var projection = d3.geoAlbers()
@@ -52,7 +53,7 @@ const render_stations = (stations, avg_station, trip_counts) => {
         .attr("fill-opacity", .4)
         .on('mouseover', function (d) {
             // Text
-            console.log(d);
+
             d3.select(this.parentNode)
                 .append('text')
                 .attr('dy', ".35em")
@@ -91,6 +92,9 @@ const render_stations = (stations, avg_station, trip_counts) => {
         .on("click", function (d, i) {
             const graph = []
             var stationName = "";
+            // selected_station = i.id;
+            // render_map(map_json);
+            // render_connections(trip_counts, selected_station);
 
             // Removes the existing graph if there is any
             d3.select(this.parentNode).selectAll('#temp3').remove('#temp3');
@@ -246,7 +250,16 @@ const render_connections = (trip_counts, selected_station) => {
 
     const link = []
 
+
     trip_counts.forEach(function (row) {
+
+        if((selected_station == undefined) || (selected_station.valueOf() == row.start_station_id.valueOf()) || (selected_station.valueOf() == row.start_station_id.valueOf()))
+            {}
+        else 
+            {
+                return;
+            }
+
         station_1 = stations_json[row.start_station_id];
         station_2 = stations_json[row.end_station_id];
 
@@ -289,6 +302,10 @@ const render_map = (map_json) => {
 const get_trip_counts = (trips) => {
     const trip_counts_json = {};
     const trip_counts = [];
+
+    Object.keys(stations_json).forEach((station) => {
+        stations_json[station].n_trips = 0;
+    })
     
     trips.forEach(function (row) {
         var name = row.start_station_id + "_" + row.end_station_id;
@@ -354,7 +371,7 @@ const load_data = async (first_load) => {
             return { start_date: d.start_date, end_date: d.end_date, start_station_id: d.start_station_id, end_station_id: d.end_station_id } 
     });
 
-    const trip_counts = await d3.csv("data/trip_count.csv", function (d) { return { start_station_id: d.start_station_id, end_station_id: d.end_station_id, count: d.count } });
+    // trip_counts = await d3.csv("data/trip_count.csv", function (d) { return { start_station_id: d.start_station_id, end_station_id: d.end_station_id, count: d.count } });
 
     const station_status = await d3.csv("data/status.csv", function (d) { 
         let dt = d.time;
@@ -366,7 +383,7 @@ const load_data = async (first_load) => {
 
     const avgStatus = d3.group(station_status, d => d.station_id);
 
-    const map_json = await d3.json("SFN.geojson");
+    map_json = await d3.json("SFN.geojson");
 
     // Get the avg number of docks available
     const avgStatus_station = [];
