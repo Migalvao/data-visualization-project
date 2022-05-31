@@ -1,11 +1,10 @@
 var width = window.innerWidth - 100,
     height = window.innerHeight - 110,
     scale = 270000,
-    latitude = 37.7870,
+    latitude = 37.7860,
     longitude = -122.4153,
+    longitude2 = -122.4503,
     length = 0;
-
-const DEBUG = false;
 
 const start_date_input = document.getElementById("start_date");
 const end_date_input = document.getElementById("end_date");
@@ -14,21 +13,31 @@ var svg;
 var stations_json = {};
 var map_json;
 var trips, stations, trip_counts;
+var station_status;
 var selected_station = null;
 
 var projection = d3.geoAlbers()
     .scale(650000)
     .rotate([-longitude, 0])
     .center([0, latitude]);
-//.parallels([24, 43]);
+
+var projection2 = d3.geoAlbers()
+    .scale(650000)
+    .rotate([-longitude2, 0])
+    .center([0, latitude]);
 
 // A path generator
 const path = d3.geoPath()
-    .projection(projection)
+    .projection(projection);
 
-const render_stations = (stations, avg_station, trip_counts) => {
+const path2 = d3.geoPath()
+    .projection(projection2);
+
+const render_stations = (stations, avg_station, trip_counts, current_projection) => {
     //Clear existing circles
     svg.selectAll("circle").remove();
+
+    console.log("Rendering stations");
     const counts = Object.values(trip_counts);
 
     max_trips = d3.max(counts, function (d) { return d.count });
@@ -44,8 +53,8 @@ const render_stations = (stations, avg_station, trip_counts) => {
         .data(avg_station)
         .enter()
         .append("circle")
-        .attr("cx", function (d) { return projection([d.long, d.lat])[0]; })
-        .attr("cy", function (d) { return projection([d.long, d.lat])[1]; })
+        .attr("cx", function (d) { return current_projection([d.long, d.lat])[0]; })
+        .attr("cy", function (d) { return current_projection([d.long, d.lat])[1]; })
         .attr("r", function (d) { return station_Radius(stations_json[d.id]['n_trips']); }) // The radius of the circle is related to the number of trips
         .style("fill", "#A20025")
         .attr("stroke", "#A20025")
@@ -63,13 +72,13 @@ const render_stations = (stations, avg_station, trip_counts) => {
                 .attr('font-size', '15px')
                 .attr('font-family', 'monospace')
                 .attr('font-weight', 'bold')
-                .attr("x", "705")
+                .attr("x", "85")
                 .attr("y", "65")
             // Text Box
             d3.select(this.parentNode)
                 .append("rect", "text")
                 .attr('id', 'temp2')
-                .attr("x", "690")
+                .attr("x", "70")
                 .attr("y", "45")
                 .attr("width", function (dx) {
                     length = d.target.__data__.name.length * 10 + 150;
@@ -85,7 +94,7 @@ const render_stations = (stations, avg_station, trip_counts) => {
         .on('mouseout', function (d) {
             d3.select(this.parentNode).selectAll('#temp').remove('#temp');
             d3.select(this.parentNode).selectAll('#temp2').remove('#temp2');
-            d3.select(this.parentNode).selectAll('#temp2').style("opacity", 1);
+
             d3.select(this).style("fill", "#A20025");
             d3.select(this).style("stroke", "#A20025");
         }).raise()
@@ -93,9 +102,17 @@ const render_stations = (stations, avg_station, trip_counts) => {
             const graph = []
             var stationName = "";
             selected_station = i.id;
-            render_map(map_json);
-            render_connections(trip_counts, selected_station);
-            render_stations(stations, avg_station, trip_counts);
+            
+            d3.selectAll('#temp').remove();
+            d3.selectAll('#temp2').remove();
+
+            render_map(map_json, projection2);
+            render_connections(trip_counts, path2);
+            render_stations(stations, avg_station, trip_counts, projection2);
+
+            const station_status = status_single_station(selected_station);
+            // aggregate data 
+            
 
             // Removes the existing graph if there is any
             d3.select(this.parentNode).selectAll('#temp3').remove('#temp3');
@@ -129,7 +146,7 @@ const render_stations = (stations, avg_station, trip_counts) => {
             // X axis -> end_station_id
             let x = d3.scaleBand()
                 .domain([d3.min(graph, function (dq) { return dq.end_station_id; }), d3.max(graph, function (dq) { return dq.end_station_id; })])
-                .range([0, length - 50])
+                .range([0, 500])
                 .padding(0.2);
 
             // Y axis -> number of trips between the stations
@@ -141,10 +158,8 @@ const render_stations = (stations, avg_station, trip_counts) => {
             // Background rect of the graph
             graph_stack.append("rect")
                 .attr("x", "-45")
-                .attr("y", "-10")
-                .attr("width", function (dx) {
-                    return length + 40;
-                })
+                .attr("y", "-20")
+                .attr("width", "600px")
                 .attr("height", "360px")
                 .style("fill", "#f5cfc1")
                 .style("opacity", .2)
@@ -163,13 +178,13 @@ const render_stations = (stations, avg_station, trip_counts) => {
 
             // Display y axis
             graph_stack.append("g")
-                .attr("transform", "translate(20,20)")
+                .attr("transform", "translate(0,20)")
                 .call(d3.axisLeft(y));
 
 
             // Display x axis 
             graph_stack.append("g")
-                .attr("transform", "translate(20,320)")
+                .attr("transform", "translate(0,320)")
                 .call(d3.axisBottom(x));
 
             // Create rects
@@ -202,14 +217,20 @@ const render_stations = (stations, avg_station, trip_counts) => {
                 .attr('font-size', "15px")
                 .attr('font-family', 'cursive')
                 .attr('font-weight', 'bold')
-                .attr("x", function (dx) {
-                    return length - 30;
-                })
+                .attr("x", "530px")
                 .attr("y", "7")
                 .on('click', function (dx) { // Click event to close the graph
                     d3.select(this.parentNode.parentNode.parentNode).selectAll('#temp3').remove('#temp3');
                     d3.select(this.parentNode.parentNode).selectAll('#temp4').remove('#temp4');
                     d3.select(this.parentNode).selectAll('#temp6').remove('#temp6');
+
+                    selected_station = null;
+                    console.log("closing graph");
+                    
+                    render_map(map_json, projection);
+                    render_connections(trip_counts, path);
+                    render_stations(stations, avg_station, trip_counts, projection);
+
                 }).raise();
 
             // Mouse over event to display the data of each react in the graph
@@ -240,7 +261,7 @@ const render_stations = (stations, avg_station, trip_counts) => {
         });
 }
 
-const render_connections = (trip_counts, selected_station) => {
+const render_connections = (trip_counts, path) => {
     
     max_trips = d3.max(trip_counts, function (d) { return d.count });
 
@@ -254,12 +275,11 @@ const render_connections = (trip_counts, selected_station) => {
 
     trip_counts.forEach(function (row) {
 
-        if((selected_station == undefined) || (selected_station.valueOf() == row.start_station_id.valueOf()) || (selected_station.valueOf() == row.start_station_id.valueOf()))
-            {}
-        else 
-            {
+        // Checking if connections should be processed
+        if(selected_station){
+            if((selected_station.valueOf() != row.start_station_id.valueOf()) && (selected_station.valueOf() != row.start_station_id.valueOf()))
                 return;
-            }
+        }
 
         station_1 = stations_json[row.start_station_id];
         station_2 = stations_json[row.end_station_id];
@@ -284,7 +304,7 @@ const render_connections = (trip_counts, selected_station) => {
         .style("opacity", .3);
 }
 
-const render_map = (map_json) => {
+const render_map = (map_json, projection) => {
     svg.selectAll("path").remove();
     d3.selectAll('#temp3').remove();
     d3.selectAll('#temp4').remove();
@@ -295,7 +315,7 @@ const render_map = (map_json) => {
         .enter()
         .append("path")
         .attr("d", d3.geoPath().projection(projection))
-        .style("fill", function () { return "#008938" })
+        .style("fill", "#008938")
         .attr("stroke", "white")
         .attr("stroke-width", .3)
         .style("opacity", .3);
@@ -340,6 +360,23 @@ const get_trip_counts = (trips) => {
     
 }
 
+const status_single_station = (id) => {
+
+    return station_status.filter((s) => { return parseInt(s.station_id) == id })
+}
+
+const aggregate_data = (type, station_data) => {
+    if(type == "weekday"){
+
+    } else if(type == "month") {
+
+    } else if(type == "hour"){
+
+    } else {
+        return [];
+    }
+}
+
 const date_update = (e) => {
     document.getElementById("mainTitle").innerHTML = "San Francisco Bicycles (loading...)";
 
@@ -347,12 +384,17 @@ const date_update = (e) => {
 
         trip_counts = get_trip_counts(trips);
 
-        render_map(map_json);
+        if(selected_station){
+            render_map(map_json, projection2);
+            render_connections(trip_counts, path2);
+            render_stations(stations, avg_station, trip_counts, projection2);
+            
+        } else {
+            render_map(map_json, projection);
+            render_connections(trip_counts, path);
+            render_stations(stations, avg_station, trip_counts, projection);
+        }
 
-        render_connections(trip_counts);
-
-        render_stations(stations, avg_station, trip_counts);
-        
         document.getElementById("mainTitle").innerHTML = "San Francisco Bicycles";
     })
     
@@ -375,7 +417,7 @@ const load_data = async (first_load) => {
 
     // trip_counts = await d3.csv("data/trip_count.csv", function (d) { return { start_station_id: d.start_station_id, end_station_id: d.end_station_id, count: d.count } });
 
-    const station_status = await d3.csv("data/status.csv", function (d) { 
+    station_status = await d3.csv("data/status.csv", function (d) { 
         let dt = d.time;
 
         if(dt > start_date_input.value && dt < end_date_input.value) {
@@ -409,7 +451,7 @@ const load_data = async (first_load) => {
 
 const main = () => {
 
-    d3.select('body')
+    d3.select('#viz_container')
         .append('svg')
         .style('width', width)
         .style('height', height)
@@ -426,14 +468,13 @@ const main = () => {
 
         stations.map((s) => { stations_json[s.id] = { lat: s.lat, long: s.long, name: s.name } });
 
-        render_map(map_json);
+        render_map(map_json, projection);
 
-        if(! DEBUG)
-            trip_counts = get_trip_counts(trips);
+        trip_counts = get_trip_counts(trips);
 
-        render_connections(trip_counts);
+        render_connections(trip_counts, path);
 
-        render_stations(stations, avg_station, trip_counts);
+        render_stations(stations, avg_station, trip_counts, projection);
     })
 
 }
