@@ -92,9 +92,10 @@ const render_stations = (stations, avg_station, trip_counts) => {
         .on("click", function (d, i) {
             const graph = []
             var stationName = "";
-            // selected_station = i.id;
-            // render_map(map_json);
-            // render_connections(trip_counts, selected_station);
+            selected_station = i.id;
+            render_map(map_json);
+            render_connections(trip_counts, selected_station);
+            render_stations(stations, avg_station, trip_counts);
 
             // Removes the existing graph if there is any
             d3.select(this.parentNode).selectAll('#temp3').remove('#temp3');
@@ -286,6 +287,7 @@ const render_connections = (trip_counts, selected_station) => {
 const render_map = (map_json) => {
     svg.selectAll("path").remove();
     d3.selectAll('#temp3').remove();
+    d3.selectAll('#temp4').remove();
 
     svg.append("g")
         .selectAll("path")
