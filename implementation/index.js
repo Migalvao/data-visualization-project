@@ -50,6 +50,8 @@ const render_stations = (stations, avg_station, trip_counts, current_projection)
     .domain([0, max_trips])
     .range([0, 60]);
 
+    avg_station = avg_station.sort((d1, d2) => { return stations_json[d2.id]['n_trips'] - stations_json[d1.id]['n_trips']})
+
     // Add circles
     svg
         .selectAll("circle")
