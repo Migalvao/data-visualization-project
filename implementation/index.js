@@ -33,11 +33,14 @@ const path = d3.geoPath()
 const path2 = d3.geoPath()
     .projection(projection2);
 
+const render_graph = (station_name, station_status) => {
+
+}
+
 const render_stations = (stations, avg_station, trip_counts, current_projection) => {
     //Clear existing circles
     svg.selectAll("circle").remove();
 
-    console.log("Rendering stations");
     const counts = Object.values(trip_counts);
 
     max_trips = d3.max(counts, function (d) { return d.count });
@@ -99,8 +102,6 @@ const render_stations = (stations, avg_station, trip_counts, current_projection)
             d3.select(this).style("stroke", "#A20025");
         }).raise()
         .on("click", function (d, i) {
-            const graph = []
-            var stationName = "";
             selected_station = i.id;
             
             d3.selectAll('#temp').remove();
@@ -110,48 +111,38 @@ const render_stations = (stations, avg_station, trip_counts, current_projection)
             render_connections(trip_counts, path2);
             render_stations(stations, avg_station, trip_counts, projection2);
 
-            const station_status = status_single_station(selected_station);
+            // get data for that station
+            var station_status = status_single_station(selected_station);
+
             // aggregate data 
-            
+            station_status = aggregate_data(station_status, "hour", selected_station); 
+            console.log(station_status);
 
             // Removes the existing graph if there is any
             d3.select(this.parentNode).selectAll('#temp3').remove('#temp3');
             d3.select(this.parentNode).selectAll('#temp4').remove('#temp4');
-
-            // Get all the trips of a certain station
-            stations.forEach(function (dx, id) {
-                // Get the REAL id of the station
-                if (i.id == id) {
-                    stationName = i.name;
-                    trip_counts.forEach(function (dy) {
-                        if (dy.start_station_id == dx.id) {
-                            graph.push({ 'start_station_id': parseInt(dx.id), 'end_station_id': parseInt(dy.end_station_id), 'count': parseInt(dy.count) });
-                        }
-                    });
-                    return; // exit the cycle
-                }
-            });
 
             // Graph
             let graph_stack = svg.append('g')
                 .attr('id', 'temp3')
                 .attr('transform', 'translate(' + 55 + ',' + 100 + ')');
 
-            // Color Scale => st
-            var colorScale = d3.scaleLinear()
-                .domain([d3.min(graph, function (dq) { return dq.end_station_id; }), d3.max(graph, function (dq) { return dq.end_station_id; })])
-                .range(["red", "blue"]);
-            var color;
+            // X axis -> hour/day of week/month
+            // let x = d3.scaleBand()
+            //     .domain([d3.min(station_status, function (dq) { return dq.hour; }), d3.max(station_status, function (dq) { return dq.hour; })])
+            //     .range([0, 500])
+            //     .padding(0.2);
 
-            // X axis -> end_station_id
-            let x = d3.scaleBand()
-                .domain([d3.min(graph, function (dq) { return dq.end_station_id; }), d3.max(graph, function (dq) { return dq.end_station_id; })])
-                .range([0, 500])
-                .padding(0.2);
+            var max_x = d3.max(station_status, function (dq) { return dq.hour; });
+            var max_y = d3.max(station_status, function (dr) { return dr.count; });
 
-            // Y axis -> number of trips between the stations
+            let x = d3.scaleLinear()
+                .domain([d3.min(station_status, function (dq) { return dq.hour; }), max_x])
+                .range([0, 500]);
+
+            // Y axis -> average of docks available
             let y = d3.scaleLinear()
-                .domain([0, d3.max(graph, function (dr) { return dr.count; })])
+                .domain([0, max_y])
                 .range([300, 0]);
 
 
@@ -184,28 +175,28 @@ const render_stations = (stations, avg_station, trip_counts, current_projection)
 
             // Display x axis 
             graph_stack.append("g")
-                .attr("transform", "translate(0,320)")
+                .attr("transform", "translate(20,320)")
                 .call(d3.axisBottom(x));
 
             // Create rects
             graph_stack.append("g")
                 .selectAll("g")
-                .data(graph)
+                .data(station_status)
                 .enter()
                 .append("rect")
                 .attr("opacity", .7)
                 .attr('id', 'temp4')
                 .attr("x", function (dg) {
-                    return x(dg.end_station_id);
+                    return x(dg.hour);
                 })
                 .attr("y", "-20")
                 .attr("height", function (dg) {
-                    return y(dg.count);
+                    return y(0) - y(dg.count);
                 })
-                .attr("width", 2)
-                .attr("fill", function (dg) { color = colorScale(dg.start_station_id); return color; })
+                .attr("width", 10)
+                .attr("fill", "#A20025")
                 .attr("transform", function (dg) {
-                    return "rotate(180, " + dg.end_station_id + ", 150)";
+                    return "rotate(180, " + (12.5 + dg.hour * 500 / max_x) + ", 150)";
                 });
 
             graph_stack.append("g")
@@ -225,7 +216,6 @@ const render_stations = (stations, avg_station, trip_counts, current_projection)
                     d3.select(this.parentNode).selectAll('#temp6').remove('#temp6');
 
                     selected_station = null;
-                    console.log("closing graph");
                     
                     render_map(map_json, projection);
                     render_connections(trip_counts, path);
@@ -248,14 +238,14 @@ const render_stations = (stations, avg_station, trip_counts, current_projection)
                         .attr('font-family', 'monospace')
                         .attr("x", 30)
                         .attr("y", 40)
-
-                    d3.select(this).style("fill", "#A20025");
+                        
+                    d3.select(this).style("fill", "#E4EEE3");
                     d3.select(this).style("stroke", "#A20025");
 
                 })
                 .on('mouseout', function (dx) {
                     d3.select(this.parentNode).selectAll('#temp5').remove('#temp5');
-                    d3.select(this).style("fill", color);
+                    d3.select(this).style("fill", "#A20025");
                     d3.select(this).style("stroke", "transparent");
                 }).raise();
         });
@@ -365,12 +355,29 @@ const status_single_station = (id) => {
     return station_status.filter((s) => { return parseInt(s.station_id) == id })
 }
 
-const aggregate_data = (type, station_data) => {
+const aggregate_data = (station_data, type, station_id) => {
     if(type == "weekday"){
 
     } else if(type == "month") {
 
     } else if(type == "hour"){
+        var by_hour = d3.groups(station_data, (d) => {
+            return new Date(d.date_time).getHours();
+        });
+
+        by_hour_avg = by_hour.map((d) => {
+            var total = 0;
+            var count = 0;
+
+            d[1].forEach((h) => {
+                total += parseFloat(h.docks_available);
+                count += 1;
+            })
+
+            return {"hour": d[0], "count": total / count / stations_json[station_id].docks};
+        });
+
+        return by_hour_avg.sort((d1, d2) => { return d1.hour - d2.hour});
 
     } else {
         return [];
@@ -404,7 +411,7 @@ const date_update = (e) => {
 const load_data = async (first_load) => {
 
     if(first_load) {
-        stations = await d3.csv("data/station.csv", function (d) { return { id: d.id, name: d.name, lat: d.lat, long: d.long }; });
+        stations = await d3.csv("data/station.csv", function (d) { return { id: d.id, name: d.name, lat: d.lat, long: d.long, docks: d.dock_count }; });
     }
 
     var start_date = new Date(start_date_input.value);
@@ -466,7 +473,7 @@ const main = () => {
 
     load_data(true).then(({ stations, station_status, trips, trip_counts, map_json, avg_station }) => {
 
-        stations.map((s) => { stations_json[s.id] = { lat: s.lat, long: s.long, name: s.name } });
+        stations.map((s) => { stations_json[s.id] = { lat: s.lat, long: s.long, name: s.name , docks: s.docks} });
 
         render_map(map_json, projection);
 
